@@ -18,10 +18,7 @@ struct Payment {
 #[starknet::interface]
 pub trait ILetapay<TContractState> {
     fn add_payment(
-        ref self: TContractState, 
-        payment_id: ByteArray, 
-        address: ContractAddress, 
-        amount: felt252
+        ref self: TContractState, payment_id: ByteArray, address: ContractAddress, amount: felt252
     );
 
     fn get_payment(self: @TContractState, payment_id: ByteArray) -> Payment;
@@ -72,12 +69,12 @@ mod Letapay {
 
             self.payments.entry(payment_id).write(payment);
 
-            self.emit(PaymentAdded {
-                payment_id,
-                amount,
-                sender_address: sender,
-                receiver_address: address,
-            });
+            self
+                .emit(
+                    PaymentAdded {
+                        payment_id, amount, sender_address: sender, receiver_address: address,
+                    }
+                );
         }
 
         fn get_payment(self: @ContractState, payment_id: ByteArray) -> Payment {
