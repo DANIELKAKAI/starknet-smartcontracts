@@ -1,12 +1,13 @@
 use starknet::ContractAddress;
+use starknet::storage::Map;
 
-#[derive(Drop, Copy, Clone, PartialEq, Debug)]
+#[derive(Serde, Drop)]
 enum PaymentStatus {
     AWAITING_TRANSFER,
     COMPLETE,
 }
 
-#[derive(Drop)]
+#[derive(Serde, Drop)]
 struct Payment {
     payment_id: ByteArray,
     amount: felt252,
@@ -41,7 +42,7 @@ mod Letapay {
     #[storage]
     struct Storage {
         owner: ContractAddress,
-        payments: LegacyMap<ByteArray, Payment>,
+        payments: super::Map<ByteArray, Payment>,
     }
 
     #[constructor]
