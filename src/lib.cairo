@@ -1,20 +1,4 @@
-use starknet::ContractAddress;
-use starknet::storage::Map;
-
-#[derive(Serde, Drop)]
-enum PaymentStatus {
-    AWAITING_TRANSFER,
-    COMPLETE,
-}
-
-#[derive(Serde, Drop)]
-struct Payment {
-    payment_id: ByteArray,
-    amount: felt252,
-    status: PaymentStatus,
-    sender_address: ContractAddress,
-    receiver_address: ContractAddress,
-}
+use core::starknet::ContractAddress;
 
 #[starknet::interface]
 pub trait ILetapay<TContractState> {
@@ -22,13 +6,23 @@ pub trait ILetapay<TContractState> {
         ref self: TContractState, payment_id: ByteArray, address: ContractAddress, amount: felt252
     );
 
-    fn get_payment(self: @TContractState, payment_id: ByteArray) -> Payment;
+    fn get_payment(self: @TContractState, payment_id: ByteArray) -> Letapay::Payment;
 }
 
 #[starknet::contract]
 mod Letapay {
-    use super::{ContractAddress, Payment, PaymentStatus};
-    use starknet::get_caller_address;
+    use core::starknet::{ContractAddress, get_caller_address, storage_access};
+    use core::starknet::storage::{
+        Map, StoragePathEntry, StoragePointerReadAccess, StorageMapReadAccess,
+        StorageMapWriteAccess, StoragePointerWriteAccess
+    };
+
+
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        PaymentAdded: PaymentAdded
+    }
 
     #[derive(Drop, starknet::Event)]
     struct PaymentAdded {
@@ -42,7 +36,22 @@ mod Letapay {
     #[storage]
     struct Storage {
         owner: ContractAddress,
-        payments: super::Map<ByteArray, Payment>,
+        payments: Map<ByteArray, Payment>,
+    }
+
+    #[derive(Copy, Drop, Serde, starknet::Store)]
+    pub enum PaymentStatus {
+        AWAITING_TRANSFER,
+        COMPLETE,
+    }
+
+    #[derive(Drop, Serde, starknet::Store)]
+    pub struct Payment {
+        payment_id: ByteArray,
+        amount: felt252,
+        status: PaymentStatus,
+        sender_address: ContractAddress,
+        receiver_address: ContractAddress,
     }
 
     #[constructor]
@@ -61,14 +70,14 @@ mod Letapay {
             let sender = get_caller_address();
 
             let payment = Payment {
-                payment_id,
-                amount,
+                payment_id: payment_id,
+                amount: amount,
                 status: PaymentStatus::AWAITING_TRANSFER,
                 sender_address: sender,
                 receiver_address: address,
             };
 
-            self.payments.entry(payment_id).write(payment);
+            self.payments.write(payment_id, payment);
 
             self
                 .emit(
