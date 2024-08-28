@@ -70,14 +70,14 @@ mod Letapay {
             let sender = get_caller_address();
 
             let payment = Payment {
-                payment_id: payment_id,
+                payment_id: payment_id.clone(),
                 amount: amount,
                 status: PaymentStatus::AWAITING_TRANSFER,
                 sender_address: sender,
                 receiver_address: address,
             };
 
-            self.payments.write(payment_id, payment);
+            self.payments.write(payment_id.clone(), payment);
 
             self
                 .emit(
