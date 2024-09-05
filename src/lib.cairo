@@ -3,21 +3,16 @@ use core::starknet::ContractAddress;
 #[starknet::interface]
 pub trait ILetapay<TContractState> {
     fn add_payment(
-        ref self: TContractState, payment_id: ByteArray, address: ContractAddress, amount: felt252
+        ref self: TContractState, payment_id: felt252, address: ContractAddress, amount: felt252
     );
 
-    fn get_payment(self: @TContractState, payment_id: ByteArray) -> Letapay::Payment;
+    fn get_payment(self: @TContractState, payment_id: felt252) -> Letapay::Payment;
 }
 
 #[starknet::contract]
 mod Letapay {
     use core::starknet::{ContractAddress, get_caller_address, storage_access};
-    use core::starknet::storage::{
-        Map, StoragePathEntry, StoragePointerReadAccess, StorageMapReadAccess,
-        StorageMapWriteAccess, StoragePointerWriteAccess
-    };
-
-
+   
     #[event]
     #[derive(Drop, starknet::Event)]
     enum Event {
@@ -27,7 +22,7 @@ mod Letapay {
     #[derive(Drop, starknet::Event)]
     struct PaymentAdded {
         #[key]
-        payment_id: ByteArray,
+        payment_id: felt252,
         amount: felt252,
         sender_address: ContractAddress,
         receiver_address: ContractAddress,
@@ -36,7 +31,7 @@ mod Letapay {
     #[storage]
     struct Storage {
         owner: ContractAddress,
-        payments: Map<ByteArray, Payment>,
+        payments: LegacyMap<felt252, Payment>,
     }
 
     #[derive(Copy, Drop, Serde, starknet::Store)]
@@ -47,7 +42,7 @@ mod Letapay {
 
     #[derive(Drop, Serde, starknet::Store)]
     pub struct Payment {
-        payment_id: ByteArray,
+        payment_id: felt252,
         amount: felt252,
         status: PaymentStatus,
         sender_address: ContractAddress,
@@ -63,7 +58,7 @@ mod Letapay {
     impl LetapayImpl of super::ILetapay<ContractState> {
         fn add_payment(
             ref self: ContractState,
-            payment_id: ByteArray,
+            payment_id: felt252,
             address: ContractAddress,
             amount: felt252,
         ) {
@@ -77,7 +72,7 @@ mod Letapay {
                 receiver_address: address,
             };
 
-            self.payments.write(payment_id.clone(), payment);
+            self.payments.write(payment_id, payment);
 
             self
                 .emit(
@@ -87,7 +82,7 @@ mod Letapay {
                 );
         }
 
-        fn get_payment(self: @ContractState, payment_id: ByteArray) -> Payment {
+        fn get_payment(self: @ContractState, payment_id: felt252) -> Payment {
             self.payments.read(payment_id)
         }
     }
