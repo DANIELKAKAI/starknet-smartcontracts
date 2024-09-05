@@ -40,13 +40,13 @@ mod Letapay {
         COMPLETE,
     }
 
-    #[derive(Drop, Serde, starknet::Store)]
+    #[derive(Drop, Serde, starknet::Store, Debug)]
     pub struct Payment {
-        payment_id: felt252,
-        amount: felt252,
-        status: PaymentStatus,
-        sender_address: ContractAddress,
-        receiver_address: ContractAddress,
+        pub payment_id: felt252,
+        pub amount: felt252,
+        pub status: PaymentStatus,
+        pub sender_address: ContractAddress,
+        pub receiver_address: ContractAddress,
     }
 
     #[constructor]

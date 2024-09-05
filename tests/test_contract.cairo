@@ -1,4 +1,7 @@
 use starknet::ContractAddress;
+use starknet::{
+    contract_address_const
+};
 
 use snforge_std::{declare, ContractClassTrait};
 
@@ -19,9 +22,18 @@ fn test_get_payment() {
 
     let dispatcher = ILetapayDispatcher { contract_address };
 
-    let payment = dispatcher.get_payment('abc');
-    
-    println!("{:?}", payment);
+    let payment_id : felt252 = '112233';
+    let address = contract_address_const::<'not owner'>();
+
+    dispatcher.add_payment(
+        payment_id: payment_id,
+        address: address,
+        amount: 8,
+    );
+
+    let payment = dispatcher.get_payment(payment_id);
+
+    assert(payment.payment_id == payment_id, 'Not found');
 
 }
 
