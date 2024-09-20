@@ -7,10 +7,12 @@ pub trait ILetapay<TContractState> {
     );
 
     fn get_payment(self: @TContractState, payment_id: felt252) -> Letapay::Payment;
+
+    fn get_owner(self: @TContractState) -> ContractAddress;
 }
 
 #[starknet::contract]
-mod Letapay {
+pub mod Letapay {
     use core::starknet::{ContractAddress, get_caller_address, storage_access};
    
     #[event]
@@ -34,7 +36,7 @@ mod Letapay {
         payments: LegacyMap<felt252, Payment>,
     }
 
-    #[derive(Copy, Drop, Serde, starknet::Store)]
+    #[derive(Copy, Drop, Serde, starknet::Store, Debug)]
     pub enum PaymentStatus {
         AWAITING_TRANSFER,
         COMPLETE,
@@ -42,6 +44,7 @@ mod Letapay {
 
     #[derive(Drop, Serde, starknet::Store, Debug)]
     pub struct Payment {
+        #[key]
         pub payment_id: felt252,
         pub amount: felt252,
         pub status: PaymentStatus,
@@ -50,8 +53,9 @@ mod Letapay {
     }
 
     #[constructor]
-    fn constructor(ref self: ContractState, init_owner: ContractAddress) {
-        self.owner.write(init_owner);
+    fn constructor(ref self: ContractState) {
+        let owner_address = get_caller_address();
+        self.owner.write(owner_address);
     }
 
     #[abi(embed_v0)]
@@ -84,6 +88,10 @@ mod Letapay {
 
         fn get_payment(self: @ContractState, payment_id: felt252) -> Payment {
             self.payments.read(payment_id)
+        }
+
+        fn get_owner(self: @ContractState) -> ContractAddress {
+            self.owner.read()
         }
     }
 }
