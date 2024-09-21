@@ -99,7 +99,7 @@ pub mod Letapay {
             assert!(self.owner.read() == get_caller_address(), "Only Owner can complete payment");
             assert!(
                 self.payments.read(payment_id).status == PaymentStatus::AWAITING_TRANSFER,
-                "Payment should have awaiting transfer status"
+                "Payment should have AWAITING_TRANSFER status"
             );
 
             let mut payment = self.payments.read(payment_id);
