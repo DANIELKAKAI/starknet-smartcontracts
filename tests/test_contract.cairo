@@ -87,7 +87,7 @@ fn test_only_owner_can_complete_payment() {
     let (sender_address, receiver_address) = setup_addresses(contract_address);
 
     add_payment_with_cheat(dispatcher, contract_address, sender_address, receiver_address);
-    
+
     start_cheat_caller_address(contract_address, sender_address);
     dispatcher.complete_payment(PAYMENT_ID);
     stop_cheat_caller_address(contract_address);
