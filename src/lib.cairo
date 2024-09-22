@@ -3,7 +3,10 @@ use core::starknet::ContractAddress;
 #[starknet::interface]
 pub trait ILetapay<TContractState> {
     fn add_payment(
-        ref self: TContractState, payment_id: felt252, receiver_address: ContractAddress, amount: felt252
+        ref self: TContractState,
+        payment_id: felt252,
+        receiver_address: ContractAddress,
+        amount: felt252
     );
 
     fn get_payment(self: @TContractState, payment_id: felt252) -> Letapay::Payment;
@@ -15,6 +18,7 @@ pub trait ILetapay<TContractState> {
 
 #[starknet::contract]
 pub mod Letapay {
+    use core::clone::Clone;
     use core::starknet::{ContractAddress, get_caller_address, storage_access};
 
     #[event]
@@ -73,7 +77,10 @@ pub mod Letapay {
     #[abi(embed_v0)]
     impl LetapayImpl of super::ILetapay<ContractState> {
         fn add_payment(
-            ref self: ContractState, payment_id: felt252, receiver_address: ContractAddress, amount: felt252,
+            ref self: ContractState,
+            payment_id: felt252,
+            receiver_address: ContractAddress,
+            amount: felt252,
         ) {
             let sender = get_caller_address();
 
@@ -90,7 +97,10 @@ pub mod Letapay {
             self
                 .emit(
                     PaymentAdded {
-                        payment_id, amount, sender_address: sender, receiver_address: receiver_address,
+                        payment_id,
+                        amount,
+                        sender_address: sender,
+                        receiver_address: receiver_address,
                     }
                 );
         }
@@ -107,6 +117,16 @@ pub mod Letapay {
             payment.status = PaymentStatus::COMPLETE;
 
             self.payments.write(payment_id, payment);
+
+            self
+                .emit(
+                    PaymentCompleted {
+                        payment_id,
+                        amount: self.payments.read(payment_id).amount,
+                        sender_address: self.payments.read(payment_id).sender_address,
+                        receiver_address: self.payments.read(payment_id).receiver_address,
+                    }
+                );
         }
 
         fn get_payment(self: @ContractState, payment_id: felt252) -> Payment {
