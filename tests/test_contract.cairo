@@ -10,7 +10,7 @@ use smart_contracts::ILetapaySafeDispatcherTrait;
 use smart_contracts::ILetapayDispatcher;
 use smart_contracts::ILetapayDispatcherTrait;
 
-use smart_contracts::Letapay::{Payment, PaymentStatus};
+use smart_contracts::Letapay::{Payment, PaymentStatus, Event, PaymentAdded , PaymentCompleted};
 
 const PAYMENT_ID: felt252 = 112233;
 const AMOUNT: felt252 = 8;
@@ -51,6 +51,20 @@ fn test_add_payment() {
     let (sender_address, receiver_address) = setup_addresses(contract_address);
 
     add_payment_with_cheat(dispatcher, contract_address, sender_address, receiver_address);
+
+    assert_eq!(
+        starknet::testing::pop_log(contract_address),
+        Option::Some(
+            Event::PaymentAdded(
+                PaymentAdded {
+                    payment_id: PAYMENT_ID,
+                    amount: AMOUNT,
+                    sender_address: sender_address,
+                    receiver_address: receiver_address,
+                }
+            )
+        )
+    );
 }
 
 #[test]
@@ -78,6 +92,20 @@ fn test_complete_payment() {
     let payment: Payment = dispatcher.get_payment(PAYMENT_ID);
 
     assert_eq!(payment.status, PaymentStatus::COMPLETE, "Failed to Complete Payment");
+
+    assert_eq!(
+        starknet::testing::pop_log(contract_address),
+        Option::Some(
+            Event::PaymentCompleted(
+                PaymentCompleted {
+                    payment_id: PAYMENT_ID,
+                    amount: AMOUNT,
+                    sender_address: sender_address,
+                    receiver_address: receiver_address,
+                }
+            )
+        )
+    );
 }
 
 #[test]

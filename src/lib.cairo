@@ -21,29 +21,31 @@ pub mod Letapay {
     use core::clone::Clone;
     use core::starknet::{ContractAddress, get_caller_address, storage_access};
 
+    //Debug and partialeq traits are used for testing
+
     #[event]
-    #[derive(Drop, starknet::Event)]
-    enum Event {
+    #[derive(Drop, starknet::Event, PartialEq, Debug)]
+    pub enum Event {
         PaymentAdded: PaymentAdded,
         PaymentCompleted: PaymentCompleted
     }
 
-    #[derive(Drop, starknet::Event)]
-    struct PaymentAdded {
+    #[derive(Drop, starknet::Event, PartialEq, Debug)]
+    pub struct PaymentAdded {
         #[key]
-        payment_id: felt252,
-        amount: felt252,
-        sender_address: ContractAddress,
-        receiver_address: ContractAddress,
+        pub payment_id: felt252,
+        pub amount: felt252,
+        pub sender_address: ContractAddress,
+        pub receiver_address: ContractAddress,
     }
 
-    #[derive(Drop, starknet::Event)]
-    struct PaymentCompleted {
+    #[derive(Drop, starknet::Event, PartialEq, Debug)]
+    pub struct PaymentCompleted {
         #[key]
-        payment_id: felt252,
-        amount: felt252,
-        sender_address: ContractAddress,
-        receiver_address: ContractAddress,
+        pub payment_id: felt252,
+        pub amount: felt252,
+        pub sender_address: ContractAddress,
+        pub receiver_address: ContractAddress,
     }
 
     #[storage]
@@ -106,7 +108,7 @@ pub mod Letapay {
         }
 
         fn complete_payment(ref self: ContractState, payment_id: felt252) {
-            assert!(self.owner.read() == get_caller_address(), "Only Owner can complete payment");
+            assert!(self._is_owner(), "Only Owner can complete payment");
             assert!(
                 self.payments.read(payment_id).status == PaymentStatus::AWAITING_TRANSFER,
                 "Payment should have AWAITING_TRANSFER status"
@@ -135,6 +137,14 @@ pub mod Letapay {
 
         fn get_owner(self: @ContractState) -> ContractAddress {
             self.owner.read()
+        }
+    }
+
+    #[generate_trait]
+    impl InternalFunctions of InternalFunctionsTrait {
+        #[inline(always)]
+        fn _is_owner(self: @ContractState) -> bool {
+            self.owner.read() == get_caller_address()
         }
     }
 }
