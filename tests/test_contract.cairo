@@ -123,7 +123,7 @@ fn test_only_owner_can_complete_payment() {
 
 #[test]
 #[should_panic(expected: ("Payment should have AWAITING_TRANSFER status",))]
-fn test_only_awaitinng_payment_can_complete_transfer() {
+fn test_only_awaiting_payment_can_complete_transfer() {
     let (dispatcher, contract_address) = init_dispatcher();
     let (sender_address, receiver_address) = setup_addresses(contract_address);
 
